@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Queue Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f8fa;
+            color: #0f1419;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #536471;
+            font-size: 15px;
+        }
+
+        .user-info {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #1d9bf0;
+        }
+
+        .logout-btn {
+            padding: 6px 16px;
+            background: #536471;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #3d4850;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .login-container h2 {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+
+        .mode-btn {
+            padding: 10px 24px;
+            border: 2px solid #1d9bf0;
+            background: white;
+            color: #1d9bf0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #1d9bf0;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            background: #1a8cd8;
+            color: white;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cfd9de;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: white;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #1d9bf0;
+            box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.1);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #1d9bf0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #1a8cd8;
+        }
+
+        .submit-btn:active {
+            background: #1781c2;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .queue-stats {
+            font-size: 15px;
+            color: #536471;
+        }
+
+        .queue-count {
+            font-weight: 700;
+            color: #1d9bf0;
+            font-size: 24px;
+        }
+
+        .clear-all-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .clear-all-btn:hover {
+            background: #ee5555;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e1e8ed;
+        }
+
+        .item-header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .badge.reply {
+            background: #e8f5fd;
+            color: #1d9bf0;
+        }
+
+        .badge.quote {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .badge.high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .badge.medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .badge.low {
+            background: #f1f8e9;
+            color: #558b2f;
+        }
+
+        .badge.founder {
+            background: #e8eaf6;
+            color: #3f51b5;
+        }
+
+        .badge.team {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .item-url {
+            color: #1d9bf0;
+            text-decoration: none;
+            font-size: 14px;
+            word-break: break-all;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .item-url:hover {
+            text-decoration: underline;
+        }
+
+        .context-box {
+            background: #f7f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 3px solid #1d9bf0;
+        }
+
+        .context-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #536471;
+            margin-bottom: 4px;
+        }
+
+        .context-text {
+            font-size: 15px;
+            color: #0f1419;
+            white-space: pre-wrap;
+        }
+
+        .comment-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .comment {
+            background: #f7f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1d9bf0;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: #0f1419;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #cfd9de;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .comment-btn {
+            padding: 8px 16px;
+            background: #1d9bf0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .comment-btn:hover {
+            background: #1a8cd8;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: #1d9bf0;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #1a8cd8;
+        }
+
+        .action-btn.secondary {
+            background: #e8f5fd;
+            color: #1d9bf0;
+        }
+
+        .action-btn.secondary:hover {
+            background: #d4ebf9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #536471;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #0f1419;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show,
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .item-timestamp {
+            font-size: 13px;
+            color: #536471;
+            margin-top: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #536471;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #4caf50;
+        }
+
+        .status-indicator.offline {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Login View -->
+        <div id="login-view" class="view active">
+            <div class="login-container">
+                <h2>Sign In</h2>
+                <div class="error-message" id="login-error"></div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                    <p style="text-align: center; margin-top: 16px; color: #536471; font-size: 14px;">
+                        Don't have an account? <a href="#" onclick="showSignup(); return false;" style="color: #1d9bf0;">Sign up</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="signup-view" class="view">
+            <div class="login-container">
+                <h2>Create Account</h2>
+                <div class="error-message" id="signup-error"></div>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-name">Name</label>
+                        <input type="text" id="signup-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required minlength="6">
+                    </div>
+                    <button type="submit" class="submit-btn">Create Account</button>
+                    <p style="text-align: center; margin-top: 16px; color: #536471; font-size: 14px;">
+                        Already have an account? <a href="#" onclick="showLogin(); return false;" style="color: #1d9bf0;">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App View -->
+        <div id="main-view" class="view">
+            <div class="container">
+                <div class="user-info">
+                    <div>
+                        <span class="status-indicator online"></span>
+                        <span class="user-name" id="user-name">Loading...</span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Sign Out</button>
+                </div>
+
+                <div class="header">
+                    <h1>Collaborative Queue Manager</h1>
+                    <p>Share ideas, get feedback, stay aligned</p>
+                </div>
+
+                <div class="mode-toggle">
+                    <button class="mode-btn active" onclick="switchMode('capture')">📝 Add Item</button>
+                    <button class="mode-btn" onclick="switchMode('review')">👀 Review Queue</button>
+                </div>
+
+                <!-- CAPTURE VIEW -->
+                <div id="capture-view" class="view active">
+                    <div class="success-message" id="success-message">
+                        ✓ Item added to queue!
+                    </div>
+
+                    <form id="capture-form">
+                        <div class="form-group">
+                            <label for="item-url">URL or Reference</label>
+                            <input 
+                                type="text" 
+                                id="item-url" 
+                                placeholder="https://twitter.com/username/status/... or any URL"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="type">Type</label>
+                                <select id="type" required>
+                                    <option value="reply">Reply</option>
+                                    <option value="quote">Quote Tweet</option>
+                                    <option value="idea">Idea</option>
+                                    <option value="question">Question</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="priority">Priority</label>
+                                <select id="priority" required>
+                                    <option value="high">High</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="context">Context / Why This Matters</label>
+                            <textarea 
+                                id="context" 
+                                placeholder="Quick note on why this is important or what you're thinking..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Add to Queue</button>
+                    </form>
+                </div>
+
+                <!-- REVIEW VIEW -->
+                <div id="review-view" class="view">
+                    <div class="dashboard-header">
+                        <div class="queue-stats">
+                            <span class="queue-count" id="queue-count">0</span> items in queue
+                        </div>
+                        <button class="clear-all-btn" onclick="clearCompleted()">Clear Completed</button>
+                    </div>
+
+                    <div id="item-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // CONFIGURATION - Replace these with your Supabase credentials
+        const SUPABASE_URL = 'https://zrymflhbaeikokshuunq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyeW1mbGhiYWVpa29rc2h1dW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMTE2NTksImV4cCI6MjA4Njc4NzY1OX0.adYAteLT99nx5blV2wXOa3jB46aeDg2sf3Vc52wpONM';
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // State
+        let currentUser = null;
+        let items = [];
+        let realtimeChannel = null;
+
+        // Initialize app
+        async function init() {
+            // Check if user is logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                currentUser = session.user;
+                await loadMainApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        // Load main app
+        async function loadMainApp() {
+            document.getElementById('login-view').classList.remove('active');
+            document.getElementById('signup-view').classList.remove('active');
+            document.getElementById('main-view').classList.add('active');
+            
+            // Get user profile
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', currentUser.id)
+                .single();
+            
+            document.getElementById('user-name').textContent = profile?.name || currentUser.email;
+            
+            // Load items
+            await loadItems();
+            
+            // Subscribe to real-time updates
+            subscribeToUpdates();
+        }
+
+        // Load items from database
+        async function loadItems() {
+            const { data, error } = await supabase
+                .from('queue_items')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('Error loading items:', error);
+                return;
+            }
+            
+            items = data || [];
+            updateQueueCount();
+            renderItems();
+        }
+
+        // Subscribe to real-time updates
+        function subscribeToUpdates() {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+            
+            realtimeChannel = supabase
+                .channel('queue_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'queue_items' },
+                    (payload) => {
+                        console.log('Change received!', payload);
+                        loadItems();
+                    }
+                )
+                .subscribe();
+        }
+
+        // Auth functions
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+            
+            if (error) {
+                showError('login-error', error.message);
+                return;
+            }
+            
+            currentUser = data.user;
+            await loadMainApp();
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { name }
+                }
+            });
+            
+            if (error) {
+                showError('signup-error', error.message);
+                return;
+            }
+            
+            // Create profile
+            if (data.user) {
+                await supabase.from('profiles').insert({
+                    id: data.user.id,
+                    name: name,
+                    email: email
+                });
+                
+                currentUser = data.user;
+                await loadMainApp();
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+            showLogin();
+        }
+
+        function showLogin() {
+            document.getElementById('main-view').classList.remove('active');
+            document.getElementById('signup-view').classList.remove('active');
+            document.getElementById('login-view').classList.add('active');
+        }
+
+        function showSignup() {
+            document.getElementById('main-view').classList.remove('active');
+            document.getElementById('login-view').classList.remove('active');
+            document.getElementById('signup-view').classList.add('active');
+        }
+
+        // Mode switching
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#main-view .view').forEach(view => view.classList.remove('active'));
+            
+            if (mode === 'capture') {
+                document.querySelector('.mode-btn:nth-child(1)').classList.add('active');
+                document.getElementById('capture-view').classList.add('active');
+            } else {
+                document.querySelector('.mode-btn:nth-child(2)').classList.add('active');
+                document.getElementById('review-view').classList.add('active');
+                renderItems();
+            }
+        }
+
+        // Form submission
+        async function handleCapture(e) {
+            e.preventDefault();
+            
+            const item = {
+                url: document.getElementById('item-url').value,
+                type: document.getElementById('type').value,
+                priority: document.getElementById('priority').value,
+                context: document.getElementById('context').value,
+                user_id: currentUser.id,
+                status: 'pending'
+            };
+
+            const { error } = await supabase
+                .from('queue_items')
+                .insert([item]);
+            
+            if (error) {
+                console.error('Error adding item:', error);
+                return;
+            }
+            
+            // Show success message
+            const successMsg = document.getElementById('success-message');
+            successMsg.classList.add('show');
+            setTimeout(() => successMsg.classList.remove('show'), 3000);
+            
+            // Reset form
+            e.target.reset();
+        }
+
+        // Render items
+        function renderItems() {
+            const itemList = document.getElementById('item-list');
+            
+            // Filter only pending items
+            const pendingItems = items.filter(item => item.status === 'pending');
+            
+            if (pendingItems.length === 0) {
+                itemList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h2>Queue is empty</h2>
+                        <p>No items to review right now</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by priority
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            const sortedItems = [...pendingItems].sort((a, b) => 
+                priorityOrder[a.priority] - priorityOrder[b.priority]
+            );
+
+            itemList.innerHTML = sortedItems.map(item => `
+                <div class="item-card">
+                    <div class="item-header">
+                        <span class="badge ${item.type}">${getTypeLabel(item.type)}</span>
+                        <span class="badge ${item.priority}">${item.priority.toUpperCase()}</span>
+                        <span class="badge ${item.user_id === currentUser.id ? 'team' : 'founder'}">
+                            ${item.user_id === currentUser.id ? 'You' : 'Partner'}
+                        </span>
+                    </div>
+                    
+                    <a href="${item.url}" target="_blank" class="item-url">${item.url}</a>
+                    
+                    <div class="context-box">
+                        <div class="context-label">Context</div>
+                        <div class="context-text">${item.context}</div>
+                    </div>
+
+                    ${renderComments(item)}
+
+                    <div class="item-timestamp">
+                        Added ${formatTimestamp(item.created_at)}
+                    </div>
+                    
+                    <div class="item-actions">
+                        <button class="action-btn primary" onclick="openUrl('${item.url}')">
+                            Open Link
+                        </button>
+                        <button class="action-btn secondary" onclick="markComplete('${item.id}')">
+                            ✓ Mark Complete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render comments
+        function renderComments(item) {
+            const comments = item.comments || [];
+            
+            return `
+                <div class="comment-section">
+                    <div class="context-label">Discussion</div>
+                    ${comments.map(comment => `
+                        <div class="comment">
+                            <div class="comment-author">${comment.user_name}</div>
+                            <div class="comment-text">${comment.text}</div>
+                        </div>
+                    `).join('')}
+                    <div class="comment-form">
+                        <input 
+                            type="text" 
+                            class="comment-input" 
+                            placeholder="Add a comment..."
+                            id="comment-${item.id}"
+                        >
+                        <button class="comment-btn" onclick="addComment('${item.id}')">
+                            Comment
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add comment
+        async function addComment(itemId) {
+            const input = document.getElementById(`comment-${itemId}`);
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            const item = items.find(i => i.id === itemId);
+            const comments = item.comments || [];
+            
+            // Get user profile
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', currentUser.id)
+                .single();
+            
+            comments.push({
+                user_id: currentUser.id,
+                user_name: profile?.name || currentUser.email,
+                text: text,
+                created_at: new Date().toISOString()
+            });
+            
+            const { error } = await supabase
+                .from('queue_items')
+                .update({ comments })
+                .eq('id', itemId);
+            
+            if (error) {
+                console.error('Error adding comment:', error);
+                return;
+            }
+            
+            input.value = '';
+        }
+
+        // Mark item as complete
+        async function markComplete(itemId) {
+            const { error } = await supabase
+                .from('queue_items')
+                .update({ status: 'completed' })
+                .eq('id', itemId);
+            
+            if (error) {
+                console.error('Error marking complete:', error);
+            }
+        }
+
+        // Clear completed items
+        async function clearCompleted() {
+            if (!confirm('Clear all completed items?')) return;
+            
+            const { error } = await supabase
+                .from('queue_items')
+                .delete()
+                .eq('status', 'completed');
+            
+            if (error) {
+                console.error('Error clearing completed:', error);
+            }
+        }
+
+        // Helper functions
+        function getTypeLabel(type) {
+            const labels = {
+                reply: '↩️ Reply',
+                quote: '🔁 Quote',
+                idea: '💡 Idea',
+                question: '❓ Question',
+                other: '📌 Other'
+            };
+            return labels[type] || type;
+        }
+
+        function openUrl(url) {
+            window.open(url, '_blank');
+        }
+
+        function updateQueueCount() {
+            const pendingCount = items.filter(item => item.status === 'pending').length;
+            const countEl = document.getElementById('queue-count');
+            if (countEl) {
+                countEl.textContent = pendingCount;
+            }
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        // Event listeners
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('signup-form').addEventListener('submit', handleSignup);
+        document.getElementById('capture-form').addEventListener('submit', handleCapture);
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
